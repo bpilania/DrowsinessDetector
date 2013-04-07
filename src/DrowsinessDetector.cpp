@@ -15,7 +15,9 @@
 #define PIXELTHRESHOLD 100
 #define NOEYESLIMIT 200
 #define DISTANCE "10"
+#define NOEYESFRAMES 10
 void raiseAlarm();
+bool checkEyes(vector<Rect> eyes);
 int main() {
 
 	CameraHandler handle;
@@ -49,17 +51,34 @@ int main() {
 
 			eyes = detector.detectEyes(faces[faceIndx], frame_gray);
 
+#ifdef debug
 			cout << "size of eyes" << eyes.size() << endl;
-
+#endif
+			if (!checkEyes(eyes)) {
+				noEyesCount++;
+				if (noEyesCount >= NOEYESFRAMES) {
+					cout << "ALARM!!! ALARM!!! ALARM !!!" << endl;
+					raiseAlarm();
+				}
+			} else {
+				noEyesCount = 0;
+			}
 			for (uint j = 0; j < eyes.size(); j++) {
-				detector.drawRect(frame,
-						Point(faces[faceIndx].x + eyes[j].x,
-								faces[faceIndx].y + eyes[j].y),
-						Point(faces[faceIndx].x + eyes[j].x + eyes[j].width,
-								faces[faceIndx].y + eyes[j].y + eyes[j].height),
-						Scalar(0, 255, 0));
-				if (flag == 1&&eyes.size()>0) {
-					numBlack += Helper::getBlackPixels(frame_gray(eyes[j]));
+				if (j == 0 || abs(eyes[j].x - eyes[0].x) >= 100) {
+					detector.drawRect(frame,
+							Point(faces[faceIndx].x + eyes[j].x,
+									faces[faceIndx].y + eyes[j].y),
+							Point(faces[faceIndx].x + eyes[j].x + eyes[j].width,
+									faces[faceIndx].y + eyes[j].y
+											+ eyes[j].height),
+							Scalar(0, 255, 0));
+					if (flag == 1 && eyes.size() > 0) {
+						numBlack += Helper::getBlackPixels(frame_gray(eyes[j]));
+					}
+#ifdef debug
+					cout << "x coordinate" << eyes[j].x << endl;
+#endif
+
 				}
 
 			}
@@ -68,19 +87,23 @@ int main() {
 				count++;
 				cout << "black pixels" << numBlack / count << endl;
 			}
+
 #ifndef TEST
-			if (numBlack / count < PIXELTHRESHOLD) {
-				noEyesCount++;
 
-				if (noEyesCount == NOEYESLIMIT) {
-					raiseAlarm();
-					noEyesCount = 0;
-				}
-
-			}
+//			if (numBlack / count < PIXELTHRESHOLD) {
+//				noEyesCount++;
+//
+//				if (noEyesCount == NOEYESLIMIT) {
+//					raiseAlarm();
+//					noEyesCount = 0;
+//				}
+//
+//			}
 #endif
 			//cout << "black pixels" << numBlack / count << endl;
 
+		} else {
+			noEyesCount++;
 		}
 		imshow("test", frame);
 		int c = waitKey(10);
@@ -107,3 +130,18 @@ int main() {
 void raiseAlarm() {
 }
 
+bool checkEyes(vector<Rect> eyes) {
+
+	if (eyes.size() == 0)
+		return false;
+	if (eyes.size() == 1)
+		return false;
+	if (eyes.size() == 2) {
+		if (abs(eyes[0].x - eyes[1].x) >= 100)
+			return true;
+		else
+			return false;
+	}
+	return true;
+
+}
