@@ -31,18 +31,21 @@ int main() {
 	detector.setFaceCascade("haarcascade_frontalface_alt.xml");
 	detector.setEyeCascade("haarcascade_eye_tree_eyeglasses.xml");
 	handle.initCamera(-1);
+#ifdef debug
 	cout << "Checkpoint 7" << endl;
-
+#endif
 	cvNamedWindow("test");
 	int numBlack = 0;
 	int flag = 0;
 	int count = 0;
 	int noEyesCount;
+#ifdef debug
 	cout << "Checkpoint 6" << endl;
-
+#endif
 	while (true) {
+#ifdef debug
 		cout << "Checkpoint 5" << endl;
-
+#endif
 		Mat frame = handle.fetchFrame();
 		Mat frame_gray;
 		int faceIndx = 0;
@@ -51,17 +54,19 @@ int main() {
 
 		vector<Rect> faces = detector.detectFaces(frame_gray);
 		vector<Rect> eyes;
+#ifdef debug
 		cout << "Checkpoint 4" << endl;
-
+#endif
 		if (faces.size() > 0) {
 			faceIndx = Helper::getMax(faces);
+#ifdef debug
 			cout << "Checkpoint 3.5" << endl;
-
+#endif
 			drawFaceRect(detector, frame, faces[faceIndx]);
+#ifdef debug
 			cout << "Checkpoint 3" << endl;
-
+#endif
 			eyes = detector.detectEyes(faces[faceIndx], frame_gray);
-			cout << "Checkpoint 2" << endl;
 
 #ifdef debug
 			cout << "size of eyes" << eyes.size() << endl;
@@ -69,19 +74,23 @@ int main() {
 			if (!checkEyes(eyes)) {
 				noEyesCount++;
 				if (noEyesCount >= NOEYESFRAMES) {
-					cout << "ALARM!!! ALARM!!! ALARM !!!" << endl;
+
 					raiseAlarm();
 				}
 			} else {
 				noEyesCount = 0;
 			}
+#ifdef debug
 			cout << "Checkpoint 1" << endl;
+#endif
 			for (uint j = 0; j < eyes.size(); j++) {
 				if (j == 0 || abs(eyes[j].x - eyes[0].x) >= 100) {
 					drawEyesRect(detector, frame, faces[faceIndx], eyes[j]);
 
 					if (flag == 1 && eyes.size() > 0) {
+#ifdef debug
 						cout << "Entered in numblack" << endl;
+#endif
 						//numBlack += Helper::getBlackPixels(frame_gray(eyes[j]));
 					}
 #ifdef debug
@@ -125,7 +134,7 @@ int main() {
 			numBlack = 0;
 		}
 		if ((char) c == 'r') {
-			cout<<"entered r"<<endl;
+			cout << "entered r" << endl;
 			flag = 1;
 		}
 		if ((char) c == 's') {
@@ -138,4 +147,5 @@ int main() {
 }
 
 void raiseAlarm() {
+	cout << "ALARM!!! ALARM!!! ALARM !!!" << endl;
 }
